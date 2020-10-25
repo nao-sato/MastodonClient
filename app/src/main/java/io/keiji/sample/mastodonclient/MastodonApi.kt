@@ -4,7 +4,7 @@ import okhttp3.ResponseBody
 import retrofit2.http.GET
 
 interface MastodonApi {
-    @GET("api/vl/timeline/public")
+    @GET("api/v2/items?page=1&per_page=20")
     suspend fun fetchPublicTimeline(
-    ): ResponseBody
+    ): List<Toot>
 }
