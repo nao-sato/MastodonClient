@@ -1,9 +1,7 @@
 package io.keiji.sample.mastodonclient
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Parcel
-import android.os.Parcelable
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity() : AppCompatActivity() {
 
@@ -12,12 +10,12 @@ class MainActivity() : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         if(savedInstanceState == null) {
-            val fragment = MainFragment()
+            val fragment = TootListFragment
             supportFragmentManager.beginTransaction()
                     .add(
                             R.id.fragment_container,
                             fragment,
-                            MainFragment::class.java.simpleName
+                            TootListFragment.TAG
                     )
                     .commit()
         }
