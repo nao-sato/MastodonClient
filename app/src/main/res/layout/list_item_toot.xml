@@ -29,13 +29,14 @@
             android:id="@+id/content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@{toot.content}"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/user_name"
+            app:layout_constraintTop_toBottomOf ="@id/user_name"
+            app:spannedContent="@{toot.content}"
             tools:text="ちなみに今日の時点でAndroid Studioから見えるバージョン別シェア。
             よくよく考えたらAndroid Pieの記載がないので、Android Studioが表示しているデータはかなり
-            古い。"/>
+            古い。" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
