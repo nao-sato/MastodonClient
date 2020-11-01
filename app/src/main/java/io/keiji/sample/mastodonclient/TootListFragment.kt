@@ -15,11 +15,12 @@ import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
+
 class TootListFragment : Fragment(R.layout.fragment_toot_list) {
 
     companion object{
         val TAG = TootListFragment::class.java.simpleName
-        private const val API_BASE_URL = "https://qiita.com"
+        private const val API_BASE_URL = "https://androidbook2020.keiji.io"
         }
 
     private val moshi = Moshi.Builder()
@@ -57,8 +58,8 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
         }
 
         corotineScope.launch {
-            val list = api.fetchPublicTimeline()
-            tootList.addAll(list)
+            val list = api.fetchPublicTimeline(onlyMedia = true)
+            tootList.addAll(list.filter { !it.sensitive })
             reloadTootList()
         }
     }
@@ -72,6 +73,7 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
 
     private suspend fun reloadTootList()= withContext(Dispatchers.Main) {
         adapter.notifyDataSetChanged()
+
     }
 }
 

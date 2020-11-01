@@ -10,7 +10,7 @@ class MainActivity() : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         if(savedInstanceState == null) {
-            val fragment = TootListFragment
+            val fragment = TootListFragment()
             supportFragmentManager.beginTransaction()
                     .add(
                             R.id.fragment_container,
