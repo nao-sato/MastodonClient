@@ -9,4 +9,7 @@ data class Toot (
     @Json(name = "media_attachments") val mediaAttachments: List<Media>,
     val content: String,
     val account: Account
-)
+){
+    val topMedia: Media?
+        get() = mediaAttachments.firstOrNull()
+}
