@@ -5,6 +5,7 @@ import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.keiji.sample.mastodonclient.databinding.FragmentTootListBinding
@@ -14,9 +15,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-
+import java.util.concurrent.atomic.AtomicBoolean
 
 class TootListFragment : Fragment(R.layout.fragment_toot_list) {
+
+
 
     companion object{
         val TAG = TootListFragment::class.java.simpleName
@@ -39,6 +42,29 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
     private lateinit var adapter: TootListAdapter
     private lateinit var layoutManager: LinearLayoutManager
 
+    private var isLoading = AtomicBoolean()
+    private var hasNext = AtomicBoolean().apply { set(true) }
+
+    private val loadNextScrollListener = object : RecyclerView.
+    OnScrollListener(){
+
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+
+            if (isLoading.get() || !hasNext.get()){
+                return
+            }
+
+            val visibleItemCount = recyclerView.childCount
+            val totalItemCount = layoutManager.itemCount
+            val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+
+            if ((totalItemCount - visibleItemCount) <= firstVisibleItemPosition){
+                loadNext()
+            }
+        }
+    }
+
     private val tootList = ArrayList<Toot>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -55,13 +81,13 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
         bindingData.recyclerView.also {
             it.layoutManager = layoutManager
             it.adapter = adapter
+            it.addOnScrollListener(loadNextScrollListener)
         }
-
-        corotineScope.launch {
-            val list = api.fetchPublicTimeline(onlyMedia = true)
-            tootList.addAll(list.filter { !it.sensitive })
-            reloadTootList()
+        bindingData.swipRefreshLayout.setOnRefreshListener {
+            tootList.clear()
+            loadNext()
         }
+        loadNext()
     }
 
 
@@ -69,6 +95,34 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
         super.onDestroyView()
 
         binding?.unbind()
+    }
+
+    private suspend fun showProgress() = withContext(Dispatchers.Main){
+        binding?.swipRefreshLayout?.isRefreshing = true
+    }
+
+    private suspend fun dismissProgress() = withContext(Dispatchers.Main){
+        binding?.swipRefreshLayout?.isRefreshing = false
+    }
+
+    private fun loadNext(){
+        corotineScope.launch {
+            isLoading.set(true)
+            showProgress()
+
+            val tootListResponse = api.fetchPublicTimeline(
+                maxId = tootList.lastOrNull()?.id,
+                onlyMedia = true
+            )
+
+            tootList.addAll(tootListResponse.filter { !it.sensitive })
+            reloadTootList()
+
+            isLoading.set(false)
+            hasNext.set(tootListResponse.isNotEmpty())
+            isLoading.set(false)
+            dismissProgress()
+        }
     }
 
     private suspend fun reloadTootList()= withContext(Dispatchers.Main) {
