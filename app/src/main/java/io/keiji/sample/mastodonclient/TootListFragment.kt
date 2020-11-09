@@ -1,17 +1,14 @@
 package io.keiji.sample.mastodonclient
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.keiji.sample.mastodonclient.databinding.FragmentTootListBinding
-import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
 import androidx.lifecycle.lifecycleScope
 
 class TootListFragment : Fragment(R.layout.fragment_toot_list) {
@@ -29,8 +26,13 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
     private lateinit var adapter: TootListAdapter
     private lateinit var layoutManager: LinearLayoutManager
 
-    private var isLoading = MutableLiveData<Boolean>()
-    private var hasNext = AtomicBoolean().apply { set(true) }
+private val viewModel: TootListViewModel by viewModels {
+    TootListViewModelFactory(
+        API_BASE_URL,
+        lifecycleScope,
+        requireContext()
+    )
+}
 
     private val loadNextScrollListener = object : RecyclerView.
     OnScrollListener(){
@@ -38,8 +40,8 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
 
-            val isLoadingSnapshot = isLoading.value ?: return
-            if (isLoadingSnapshot || !hasNext.get()) {
+            val isLoadingSnapshot = viewModel.isLoading.value ?: return
+            if (isLoadingSnapshot || !viewModel.hasNext) {
                 return
             }
 
@@ -48,18 +50,16 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
             val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
 
             if ((totalItemCount - visibleItemCount) <= firstVisibleItemPosition){
-                loadNext()
+                viewModel.loadNext()
             }
         }
     }
 
-    private val tootList = MutableLiveData<ArrayList<Toot>>()
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val tootListSnapshot = tootList.value ?: ArrayList<Toot>().also {
-            tootList.value = it
+        val tootListSnapshot = viewModel.tootList.value ?: ArrayList<Toot>().also {
+            viewModel.tootList.value = it
         }
 
         adapter = TootListAdapter(layoutInflater, tootListSnapshot)
@@ -76,42 +76,16 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
             it.addOnScrollListener(loadNextScrollListener)
         }
         bindingData.swipRefreshLayout.setOnRefreshListener {
-            tootListSnapshot.clear()
-            loadNext()
+            viewModel.clear()
+            viewModel.loadNext()
         }
-        isLoading.observe(viewLifecycleOwner, Observer {
+        viewModel.isLoading.observe(viewLifecycleOwner, Observer {
             binding?.swipRefreshLayout?.isRefreshing = it
         })
-        tootList.observe(viewLifecycleOwner, Observer {
+        viewModel.tootList.observe(viewLifecycleOwner, Observer {
             adapter.notifyDataSetChanged()
         })
-        loadNext()
-    }
-
-
-    private val tootRepository = TootRepository(API_BASE_URL)
-
-    private fun loadNext(){
-        lifecycleScope.launch {
-            isLoading.postValue(true)
-
-            val tootListSnapshot = tootList.value ?: ArrayList()
-
-            val tootListResponse = tootRepository.fetchPublicTimeline(
-                maxId = tootListSnapshot.lastOrNull()?.id,
-                onlyMedia = true
-            )
-            Log.d(TAG,"fetchPublicTimeline")
-
-            tootListSnapshot.addAll(tootListResponse.filter { !it.sensitive })
-            Log.d(TAG,"addAll")
-
-            tootList.postValue(tootListSnapshot)
-
-            hasNext.set(tootListResponse.isNotEmpty())
-            isLoading.postValue(false)
-            Log.d(TAG,"dismissProgress")
-        }
+        viewLifecycleOwner.lifecycle.addObserver(viewModel)
     }
 }
 
