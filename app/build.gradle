@@ -28,7 +28,28 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        def instanceProperties = project.rootProject.file('instance.properties')
+        if (!instanceProperties.exists()){
+            instanceProperties.createNewFile()
+        }
+        //新しいプロジェクト　的な
+        def prop = new Properties()
+        //load→読み込み、root→道
+        prop.load(project.rootProject.file('instance.properties').
+        newDataInputStream())
+        //getPropatyでプロパティを読みこむ
+        def INSTANCE_URL = prop.getProperty("instance_url") ?: ""
+        def USERNAME = prop.getProperty("username") ?: ""
+        def ACCESS_TOKEN = prop.getProperty("access_token") ?: ""
+
+        //この記述でファイルの中の値にアクセスできる
+        buildConfigField("String","INSTANCE_URL","\"${INSTANCE_URL}\"")
+        buildConfigField("String","USERNAME","\"${USERNAME}\"")
+        buildConfigField("String","ACCESS_TOKEN","\"${ACCESS_TOKEN}\"")
     }
+
+
 
     buildTypes {
         release {

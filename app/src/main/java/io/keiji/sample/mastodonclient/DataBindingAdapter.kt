@@ -9,10 +9,7 @@ import com.bumptech.glide.Glide
 
 @BindingAdapter("spannedContent")
 fun TextView.setSpannedString(content: String){
-    text = HtmlCompat.fromHtml(
-        content,
-        HtmlCompat.FROM_HTML_MODE_COMPACT
-    )
+    text = HtmlCompat.fromHtml(content, HtmlCompat.FROM_HTML_MODE_COMPACT)
 }
 
 @BindingAdapter("media")

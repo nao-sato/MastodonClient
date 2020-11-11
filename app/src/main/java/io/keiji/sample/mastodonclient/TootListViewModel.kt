@@ -6,16 +6,26 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class TootListViewModel (
-    instanceUrl: String,
+    private val instanceUrl: String,
+    private val username: String,
     private val coroutineScope: CoroutineScope,
     application: Application
 ):AndroidViewModel(application),LifecycleObserver{
 
-    private val tootRepository = TootRepository(instanceUrl)
+    private val userCredentialRepository = UserCredentialRerository(application)
+
+    private lateinit var tootRepository : TootRepository
+
+    private lateinit var userCredential: UserCredential
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onCreate() {
-        loadNext()
+        coroutineScope.launch {
+            userCredential = userCredentialRepository
+                .find(instanceUrl,username) ?: return@launch
+            tootRepository = TootRepository(userCredential)
+            loadNext()
+        }
     }
 
     val isLoading = MutableLiveData<Boolean>()
@@ -34,11 +44,11 @@ class TootListViewModel (
 
             val tootListSnapshot = tootList.value ?: ArrayList()
             val maxId = tootListSnapshot.lastOrNull()?.id
-            val tootListResponse = tootRepository.fetchPublicTimeline(
-                maxId = maxId,
-                onlyMedia = true
+            val tootListResponse = tootRepository.fetchHomeTimeline(
+                maxId = maxId
             )
             tootListResponse.isNotEmpty()
+            tootListSnapshot.addAll(tootListResponse)
             tootList.postValue(tootListSnapshot)
 
             hasNext = tootListResponse.isNotEmpty()

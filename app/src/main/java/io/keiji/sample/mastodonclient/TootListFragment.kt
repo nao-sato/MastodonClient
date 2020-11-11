@@ -14,11 +14,9 @@ import androidx.lifecycle.lifecycleScope
 class TootListFragment : Fragment(R.layout.fragment_toot_list) {
 
 
-    companion object{
+    companion object {
         val TAG = TootListFragment::class.java.simpleName
-        private const val API_BASE_URL = "https://androidbook2020.keiji.io"
-        }
-
+    }
 
 
     private var binding : FragmentTootListBinding? = null
@@ -28,7 +26,8 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list) {
 
 private val viewModel: TootListViewModel by viewModels {
     TootListViewModelFactory(
-        API_BASE_URL,
+        BuildConfig.INSTANCE_URL,
+        BuildConfig.USERNAME,
         lifecycleScope,
         requireContext()
     )

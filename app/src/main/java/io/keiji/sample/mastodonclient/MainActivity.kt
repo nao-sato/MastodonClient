@@ -14,11 +14,7 @@ class MainActivity() : AppCompatActivity() {
         if(savedInstanceState == null) {
             val fragment = TootListFragment()
             supportFragmentManager.beginTransaction()
-                    .add(
-                            R.id.fragment_container,
-                            fragment,
-                            TootListFragment.TAG
-                    )
+                    .add(R.id.fragment_container, fragment, TootListFragment.TAG)
                     .commit()
         }
     }
