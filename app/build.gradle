@@ -38,6 +38,7 @@ android {
         //load→読み込み、root→道
         prop.load(project.rootProject.file('instance.properties').
         newDataInputStream())
+
         //getPropatyでプロパティを読みこむ
         def INSTANCE_URL = prop.getProperty("instance_url") ?: ""
         def USERNAME = prop.getProperty("username") ?: ""
