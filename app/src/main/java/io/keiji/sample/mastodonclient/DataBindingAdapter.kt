@@ -5,6 +5,7 @@ import android.widget.TextView
 import androidx.core.text.HtmlCompat
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
+import io.keiji.sample.mastodonclient.entity.Media
 
 
 @BindingAdapter("spannedContent")
@@ -13,7 +14,7 @@ fun TextView.setSpannedString(content: String){
 }
 
 @BindingAdapter("media")
-fun ImageView.setMedia(media:Media?){
+fun ImageView.setMedia(media: Media?){
         if (media == null) {
             setImageDrawable(null)
             return

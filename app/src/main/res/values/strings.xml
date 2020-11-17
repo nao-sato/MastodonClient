@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MastodonClient</string>
+    <string name="Public">Public</string>
+    <string name="User">User</string>
 </resources>

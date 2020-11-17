@@ -1,13 +1,15 @@
-package io.keiji.sample.mastodonclient
+package io.keiji.sample.mastodonclient.repository
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import io.keiji.sample.mastodonclient.ui.MastodonApi
+import io.keiji.sample.mastodonclient.entity.UserCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-// データ取得処理を行うところ
+// ネットワークアクセスに関係するコード（IOスレッド）
 
 class TootRepository(private val userCredential: UserCredential) {
 
@@ -29,7 +31,8 @@ class TootRepository(private val userCredential: UserCredential) {
         api.fetchPublicTimeline(maxId =  maxId, onlyMedia = onlyMedia)
     }
 
-    suspend fun fetchHomeTimeline(maxId: String?) = withContext(Dispatchers.IO) {
+    suspend fun fetchHomeTimeline(maxId: String?)
+            = withContext(Dispatchers.IO) {
         api.fetchHomeTimeline(accessToken = "Bearer ${userCredential.accessToken}", maxId = maxId)
     }
 }

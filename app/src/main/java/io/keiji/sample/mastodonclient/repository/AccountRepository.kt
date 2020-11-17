@@ -1,7 +1,10 @@
-package io.keiji.sample.mastodonclient
+package io.keiji.sample.mastodonclient.repository
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import io.keiji.sample.mastodonclient.ui.MastodonApi
+import io.keiji.sample.mastodonclient.entity.Account
+import io.keiji.sample.mastodonclient.entity.UserCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
@@ -19,8 +22,8 @@ class AccountRepository (private val userCredential: UserCredential) {
     private val api = retrofit.create(MastodonApi::class.java)
 
     suspend fun verifyAccountCredential(
-    ):Account = withContext(Dispatchers.IO){
-        return@withContext api.verifyAccountCredentials(
+    ): Account = withContext(Dispatchers.IO){
+        return@withContext api.verifyAccountCredential(
             "Bearer ${userCredential.accessToken}"
         )
     }

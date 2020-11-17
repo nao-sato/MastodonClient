@@ -1,45 +1,56 @@
-package io.keiji.sample.mastodonclient
+package io.keiji.sample.mastodonclient.ui.toot_list
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
+import io.keiji.sample.mastodonclient.R
 import io.keiji.sample.mastodonclient.databinding.ListItemTootBinding
+import io.keiji.sample.mastodonclient.entity.Toot
 
 class TootListAdapter (//最終的にこいつはViewHolderのリスト、Tootのセルを使い回す機能、送られてきたデータの更新機能を持っている。
     private val layoutInflater: LayoutInflater,
-    //↓↓リサイクラービューを作るときは何らかのリストがいる
-    private val tootList: ArrayList<Toot>
+    //↓↓リサイクラービューを作るときは何らかのリストがいる(tootリストはフラグメントで作ってる）
+    private val tootList: ArrayList<Toot>,
+    private val callback: Callback?
 //ここがアダプターを作ろうとした時の決まった記述
 ): RecyclerView.Adapter<TootListAdapter.ViewHolder>(){//ここのViewHolderに各メソッドの戻り値が送られてくる
 
 
-    //投稿の数を数えてくれる
+    interface Callback{
+        fun openDetail(toot: Toot)
+    }
+    //読み込まれた投稿の数を数えてくれる
     override fun getItemCount() = tootList.size
 
-    //Viewholderをインスタンス化してくれる。ここではリサイクラービューのリストの一つ一つのセルが作られている（
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {//戻り値　
+    //ここではリサイクラービューのリストの一つ一つのセルが作られている
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
+            : ViewHolder {//戻り値　
         val binding = DataBindingUtil.inflate<ListItemTootBinding>(
             layoutInflater,//一つのTootのレイアウトを一つのビューとして扱うときにこの記述、つまりインフレーターを使う
             R.layout.list_item_toot,//レイアウトのURL
             parent,
             false
         )
-        return ViewHolder(binding)
+        return ViewHolder(binding,callback)
     }
 
     //ViewHolderの中身を更新するメソッド
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
        holder.bind(tootList[position])
         //更新しようとする時のデータが何番目（position）なのかを教えてくれて、その時のデータをバインドする
-        //ポジションはgetItemCountで数えてくれてる
     }
 
-    class ViewHolder(private val binding: ListItemTootBinding):
+    class ViewHolder(
+        private val binding: ListItemTootBinding,
+        private val callback: Callback?
     //binding.rootでビューが取れる（constraintlayoutのとこ）ここのスーパークラスの引数にはviewをいれる必要がある
-        RecyclerView.ViewHolder(binding.root){
+    ):RecyclerView.ViewHolder(binding.root){
         fun bind(toot: Toot){
            binding.toot = toot
+            binding.root.setOnClickListener {
+                callback?.openDetail(toot)
+            }
         }
     }
 }

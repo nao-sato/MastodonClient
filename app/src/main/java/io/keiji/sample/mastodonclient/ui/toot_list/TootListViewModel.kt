@@ -1,13 +1,20 @@
-package io.keiji.sample.mastodonclient
+package io.keiji.sample.mastodonclient.ui.toot_list
 
 import android.app.Application
 import androidx.lifecycle.*
+import io.keiji.sample.mastodonclient.entity.Account
+import io.keiji.sample.mastodonclient.entity.Toot
+import io.keiji.sample.mastodonclient.entity.UserCredential
+import io.keiji.sample.mastodonclient.repository.AccountRepository
+import io.keiji.sample.mastodonclient.repository.TootRepository
+import io.keiji.sample.mastodonclient.repository.UserCredentialRerository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class TootListViewModel (
     private val instanceUrl: String,
     private val username: String,
+    private val timelineType: TimelineType,
     private val coroutineScope: CoroutineScope,
     application: Application
 ):AndroidViewModel(application),LifecycleObserver{
@@ -46,7 +53,14 @@ class TootListViewModel (
 
             val tootListSnapshot = tootList.value ?: ArrayList()
             val maxId = tootListSnapshot.lastOrNull()?.id
-            val tootListResponse = tootRepository.fetchHomeTimeline(maxId = maxId)
+            val tootListResponse = when (timelineType){
+                TimelineType.PublicTimeline -> {
+                    tootRepository.fetchPublicTimeline(maxId = maxId,onlyMedia = true)
+                }
+                TimelineType.HomeTimeline -> {
+                    tootRepository.fetchHomeTimeline(maxId = maxId)
+                }
+            }
 
             tootListResponse.isNotEmpty()
             tootListSnapshot.addAll(tootListResponse)

@@ -1,4 +1,4 @@
-package io.keiji.sample.mastodonclient
+package io.keiji.sample.mastodonclient.ui.toot_list
 
 import android.os.Bundle
 import android.view.View
@@ -10,28 +10,58 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.keiji.sample.mastodonclient.databinding.FragmentTootListBinding
 import androidx.lifecycle.lifecycleScope
+import io.keiji.sample.mastodonclient.BuildConfig
+import io.keiji.sample.mastodonclient.R
+import io.keiji.sample.mastodonclient.entity.Toot
+import io.keiji.sample.mastodonclient.ui.toot_detail.TootDetailFragment
 
-class TootListFragment : Fragment(R.layout.fragment_toot_list) {
+class TootListFragment : Fragment(R.layout.fragment_toot_list),
+    TootListAdapter.Callback {
 
 
     companion object {
         val TAG = TootListFragment::class.java.simpleName
+
+
+        private const val BUNDLE_KEY_TIMELINE_TYPE_ORDINAL = "timeline_type_ordinal"
+
+        @JvmStatic
+        fun newInstance(timelineType: TimelineType): TootListFragment {
+            val args = Bundle().apply {
+                putInt(BUNDLE_KEY_TIMELINE_TYPE_ORDINAL, timelineType.ordinal)
+            }
+            return TootListFragment().apply {
+                arguments = args
+            }
+        }
     }
-
-
     private var binding : FragmentTootListBinding? = null
 
     private lateinit var adapter: TootListAdapter
     private lateinit var layoutManager: LinearLayoutManager
 
-private val viewModel: TootListViewModel by viewModels {
-    TootListViewModelFactory(
-        BuildConfig.INSTANCE_URL,
-        BuildConfig.USERNAME,
-        lifecycleScope,
-        requireContext()
-    )
-}
+    private var timelineType = TimelineType.PublicTimeline
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireArguments().also {
+            val typeOrdinal = it.getInt(
+                BUNDLE_KEY_TIMELINE_TYPE_ORDINAL,
+                TimelineType.PublicTimeline.ordinal
+            )
+            timelineType = TimelineType.values()[typeOrdinal]
+        }
+    }
+
+    private val viewModel: TootListViewModel by viewModels {
+        TootListViewModelFactory(
+            BuildConfig.INSTANCE_URL,
+            BuildConfig.USERNAME,
+            timelineType,
+            lifecycleScope,
+            requireContext()
+        )
+    }
 
     private val loadNextScrollListener = object : RecyclerView.
     OnScrollListener(){
@@ -61,7 +91,7 @@ private val viewModel: TootListViewModel by viewModels {
             viewModel.tootList.value = it
         }
 
-        adapter = TootListAdapter(layoutInflater, tootListSnapshot)
+        adapter = TootListAdapter(layoutInflater, tootListSnapshot,this)
         layoutManager = LinearLayoutManager(
             requireContext(),
             LinearLayoutManager.VERTICAL,
@@ -86,5 +116,13 @@ private val viewModel: TootListViewModel by viewModels {
         })
         viewLifecycleOwner.lifecycle.addObserver(viewModel)
     }
-}
+
+     override fun openDetail(toot: Toot) {
+         val fragment = TootDetailFragment.newInstance(toot)
+         parentFragmentManager.beginTransaction()
+             .replace(R.id.fragment_container,fragment)
+             .addToBackStack(TootDetailFragment.TAG)
+             .commit()
+     }
+ }
 
