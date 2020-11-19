@@ -6,6 +6,8 @@ import io.keiji.sample.mastodonclient.ui.MastodonApi
 import io.keiji.sample.mastodonclient.entity.UserCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
@@ -22,6 +24,12 @@ class TootRepository(private val userCredential: UserCredential) {
     private val retrofit = Retrofit.Builder()
         .baseUrl(userCredential.instanceUrl)
         .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .client(
+            OkHttpClient.Builder()
+                .addInterceptor(HttpLoggingInterceptor().apply {
+                    level = HttpLoggingInterceptor.Level.BODY
+                })
+                .build())
         .build()
 
     //MastodonApiのURLと合体
