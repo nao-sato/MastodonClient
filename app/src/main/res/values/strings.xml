@@ -2,4 +2,6 @@
     <string name="app_name">MastodonClient</string>
     <string name="Public">Public</string>
     <string name="User">User</string>
+    <string name="hintMessage">いまなにをしていますか</string>
+    <string name="post">Post</string>
 </resources>

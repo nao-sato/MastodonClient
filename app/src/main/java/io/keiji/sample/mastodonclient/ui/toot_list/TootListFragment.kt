@@ -1,7 +1,9 @@
 package io.keiji.sample.mastodonclient.ui.toot_list
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -12,8 +14,10 @@ import io.keiji.sample.mastodonclient.databinding.FragmentTootListBinding
 import androidx.lifecycle.lifecycleScope
 import io.keiji.sample.mastodonclient.BuildConfig
 import io.keiji.sample.mastodonclient.R
+import io.keiji.sample.mastodonclient.entity.Account
 import io.keiji.sample.mastodonclient.entity.Toot
-import io.keiji.sample.mastodonclient.ui.toot_detail.TootDetailFragment
+import io.keiji.sample.mastodonclient.ui.toot_detail.TootDetailActivity
+import io.keiji.sample.mastodonclient.ui.toot_edit.TootEditActivity
 
 class TootListFragment : Fragment(R.layout.fragment_toot_list),
     TootListAdapter.Callback {
@@ -84,6 +88,8 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list),
         }
     }
 
+
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -104,12 +110,18 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list),
             it.adapter = adapter
             it.addOnScrollListener(loadNextScrollListener)
         }
-        bindingData.swipRefreshLayout.setOnRefreshListener {
+        bindingData.swipeRefreshLayout.setOnRefreshListener {
             viewModel.clear()
             viewModel.loadNext()
         }
+        bindingData.fab.setOnClickListener{
+            launchTootEditActivity()
+        }
         viewModel.isLoading.observe(viewLifecycleOwner, Observer {
-            binding?.swipRefreshLayout?.isRefreshing = it
+            binding?.swipeRefreshLayout?.isRefreshing = it
+        })
+        viewModel.accountInfo.observe(viewLifecycleOwner, Observer {
+            showAccountInfo(it)
         })
         viewModel.tootList.observe(viewLifecycleOwner, Observer {
             adapter.notifyDataSetChanged()
@@ -117,12 +129,20 @@ class TootListFragment : Fragment(R.layout.fragment_toot_list),
         viewLifecycleOwner.lifecycle.addObserver(viewModel)
     }
 
+    private fun launchTootEditActivity(){
+        val intent = TootEditActivity.newIntent(requireContext())
+        startActivity(intent)
+    }
+
+    private fun showAccountInfo(accountInfo: Account){
+        val activity = requireActivity()
+        if (activity is AppCompatActivity){
+            activity.supportActionBar?.subtitle = accountInfo.username
+        }
+    }
      override fun openDetail(toot: Toot) {
-         val fragment = TootDetailFragment.newInstance(toot)
-         parentFragmentManager.beginTransaction()
-             .replace(R.id.fragment_container,fragment)
-             .addToBackStack(TootDetailFragment.TAG)
-             .commit()
+         val intent = TootDetailActivity.newIntent(requireContext(),toot)
+         startActivity(intent)
      }
  }
 

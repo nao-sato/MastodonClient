@@ -7,7 +7,7 @@ import io.keiji.sample.mastodonclient.entity.Toot
 import io.keiji.sample.mastodonclient.entity.UserCredential
 import io.keiji.sample.mastodonclient.repository.AccountRepository
 import io.keiji.sample.mastodonclient.repository.TootRepository
-import io.keiji.sample.mastodonclient.repository.UserCredentialRerository
+import io.keiji.sample.mastodonclient.repository.UserCredentialRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -19,7 +19,7 @@ class TootListViewModel (
     application: Application
 ):AndroidViewModel(application),LifecycleObserver{
 
-    private val userCredentialRepository = UserCredentialRerository(application)
+    private val userCredentialRepository = UserCredentialRepository(application)
 
     private lateinit var tootRepository : TootRepository
     private lateinit var accountRepository: AccountRepository

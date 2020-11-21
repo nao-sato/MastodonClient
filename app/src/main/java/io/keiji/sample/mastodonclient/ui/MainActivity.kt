@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
                     TootListFragment.newInstance(TimelineType.HomeTimeline)
                 }
                 R.id.menu_public -> {
-                    TootListFragment.newInstance(TimelineType.HomeTimeline)
+                    TootListFragment.newInstance(TimelineType.PublicTimeline)
                 }
                 else -> null
             }
