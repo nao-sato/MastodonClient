@@ -44,11 +44,19 @@ android {
         def INSTANCE_URL = prop.getProperty("instance_url") ?: ""
         def USERNAME = prop.getProperty("username") ?: ""
         def ACCESS_TOKEN = prop.getProperty("access_token") ?: ""
+        def CLIENT_KEY = prop.getProperty("client_key") ?: ""
+        def CLIENT_SECRET = prop.getProperty("client_secret") ?:""
+        def CLIENT_REDIRECT_URI = prop.getProperty("client_redirect_uri") ?:""
+        def CLIENT_SCOPES = prop.getProperty("client_scopes") ?:""
 
         //この記述でファイルの中の値にアクセスできる
         buildConfigField("String","INSTANCE_URL","\"${INSTANCE_URL}\"")
         buildConfigField("String","USERNAME","\"${USERNAME}\"")
         buildConfigField("String","ACCESS_TOKEN","\"${ACCESS_TOKEN}\"")
+        buildConfigField("String","CLIENT_KEY","\"${CLIENT_KEY}\"")
+        buildConfigField("String","CLIENT_SECRET","\"${CLIENT_SECRET}\"")
+        buildConfigField("String","CLIENT_REDIRECT_URI","\"${CLIENT_REDIRECT_URI}\"")
+        buildConfigField("String","CLIENT_SCOPES","\"${CLIENT_SCOPES}\"")
     }
 
 

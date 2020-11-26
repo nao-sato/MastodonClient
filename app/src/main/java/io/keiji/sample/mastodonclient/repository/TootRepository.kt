@@ -46,9 +46,10 @@ class TootRepository(private val userCredential: UserCredential) {
     }
 
     suspend fun postToot(status: String): Toot = withContext(Dispatchers.IO){
-        return@withContext api.postToot(
-            "Bearer $(userCredential.accessToken",
-            status
-        )
+        return@withContext api.postToot("Bearer ${userCredential.accessToken}", status)
+    }
+
+    suspend fun delete(id: String) = withContext(Dispatchers.IO) {
+        api.deleteToot("Bearer ${userCredential.accessToken}", id)
     }
 }

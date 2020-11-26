@@ -17,23 +17,19 @@ class TootListViewModel (
     private val timelineType: TimelineType,
     private val coroutineScope: CoroutineScope,
     application: Application
-):AndroidViewModel(application),LifecycleObserver{
+):AndroidViewModel(application),LifecycleObserver {
+
+    val loginRequired = MutableLiveData<Boolean>()
 
     private val userCredentialRepository = UserCredentialRepository(application)
 
-    private lateinit var tootRepository : TootRepository
+    private lateinit var tootRepository: TootRepository
     private lateinit var accountRepository: AccountRepository
     private lateinit var userCredential: UserCredential
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onCreate() {
-        coroutineScope.launch {
-            userCredential = userCredentialRepository
-                .find(instanceUrl,username) ?: return@launch
-            tootRepository = TootRepository(userCredential)
-            accountRepository = AccountRepository(userCredential)
-            loadNext()
-        }
+        reloadUserCredential()
     }
 
     val isLoading = MutableLiveData<Boolean>()
@@ -41,21 +37,21 @@ class TootListViewModel (
     val accountInfo = MutableLiveData<Account>()
     val tootList = MutableLiveData<ArrayList<Toot>>()
 
-    fun clear(){
+    fun clear() {
         val tootListSnapshot = tootList.value ?: return
         tootListSnapshot.clear()
     }
 
-    fun loadNext(){
+    fun loadNext() {
         coroutineScope.launch {
             updateAccountInfo()
             isLoading.postValue(true)
 
             val tootListSnapshot = tootList.value ?: ArrayList()
             val maxId = tootListSnapshot.lastOrNull()?.id
-            val tootListResponse = when (timelineType){
+            val tootListResponse = when (timelineType) {
                 TimelineType.PublicTimeline -> {
-                    tootRepository.fetchPublicTimeline(maxId = maxId,onlyMedia = true)
+                    tootRepository.fetchPublicTimeline(maxId = maxId, onlyMedia = true)
                 }
                 TimelineType.HomeTimeline -> {
                     tootRepository.fetchHomeTimeline(maxId = maxId)
@@ -76,6 +72,33 @@ class TootListViewModel (
             ?: accountRepository.verifyAccountCredential()
 
         accountInfo.postValue(accountInfoSnapshot)
+    }
+
+    fun delete(toot: Toot) {
+        coroutineScope.launch {
+            tootRepository.delete(toot.id)
+
+            val tootListSnapshot = tootList.value
+            tootListSnapshot?.remove(toot)
+            tootList.postValue(tootListSnapshot)
+        }
+    }
+
+    fun reloadUserCredential() {
+        coroutineScope.launch {
+            val credential = userCredentialRepository
+                .find(instanceUrl, username)
+            if (credential == null) {
+                loginRequired.postValue(true)
+                return@launch
+            }
+            tootRepository = TootRepository(credential)
+            accountRepository = AccountRepository(credential)
+            userCredential = credential
+
+            clear()
+            loadNext()
+        }
     }
 }
 

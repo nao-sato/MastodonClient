@@ -4,4 +4,5 @@
     <string name="User">User</string>
     <string name="hintMessage">いまなにをしていますか</string>
     <string name="post">Post</string>
+    <string name="delete">削除</string>
 </resources>
