@@ -2,26 +2,28 @@ package io.keiji.sample.mastodonclient.repository
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import io.keiji.sample.mastodonclient.entity.Media
 import io.keiji.sample.mastodonclient.entity.Toot
 import io.keiji.sample.mastodonclient.ui.MastodonApi
 import io.keiji.sample.mastodonclient.entity.UserCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.io.File
 
-// ネットワークアクセスに関係するコード（IOスレッド）
 
 class TootRepository(private val userCredential: UserCredential) {
 
-    //Moshiのビルド
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
 
-    //Moshiを渡したretrofitを作る
     private val retrofit = Retrofit.Builder()
         .baseUrl(userCredential.instanceUrl)
         .addConverterFactory(MoshiConverterFactory.create(moshi))
@@ -33,7 +35,6 @@ class TootRepository(private val userCredential: UserCredential) {
                 .build())
         .build()
 
-    //MastodonApiのURLと合体
     private val api = retrofit.create(MastodonApi::class.java)
     suspend fun fetchPublicTimeline(maxId: String?, onlyMedia:  Boolean)
             = withContext(Dispatchers.IO) {
@@ -45,10 +46,33 @@ class TootRepository(private val userCredential: UserCredential) {
         api.fetchHomeTimeline(accessToken = "Bearer ${userCredential.accessToken}", maxId = maxId)
     }
 
-    suspend fun postToot(status: String): Toot = withContext(Dispatchers.IO){
-        return@withContext api.postToot("Bearer ${userCredential.accessToken}", status)
+    suspend fun postToot(
+        status: String,
+        mediaIds: List<String>? = null
+    ): Toot = withContext(Dispatchers.IO){
+        return@withContext api.postToot(
+            "Bearer ${userCredential.accessToken}",
+            status,
+            mediaIds
+        )
     }
 
+    suspend fun postMedia(
+        file: File,
+        mediaType: String
+    ): Media = withContext(Dispatchers.IO) {
+
+        val part = MultipartBody.Part.createFormData(
+            "file",
+            file.name,
+            RequestBody.create(MediaType.parse(mediaType),file)
+        )
+
+        return@withContext api.postMedia(
+            "Bearer ${userCredential.accessToken}",
+            part
+        )
+    }
     suspend fun delete(id: String) = withContext(Dispatchers.IO) {
         api.deleteToot("Bearer ${userCredential.accessToken}", id)
     }

@@ -1,52 +1,88 @@
+
 package io.keiji.sample.mastodonclient.ui.toot_list
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.keiji.sample.mastodonclient.R
 import io.keiji.sample.mastodonclient.databinding.ListItemTootBinding
 import io.keiji.sample.mastodonclient.entity.Toot
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class TootListAdapter (//最終的にこいつはViewHolderのリスト、Tootのセルを使い回す機能、送られてきたデータの更新機能を持っている。
+class TootListAdapter (
     private val layoutInflater: LayoutInflater,
-    //↓↓リサイクラービューを作るときは何らかのリストがいる(tootリストはフラグメントで作ってる）
-    private val tootList: ArrayList<Toot>,
+    private val coroutineScope: CoroutineScope,
     private val callback: Callback?
-//ここがアダプターを作ろうとした時の決まった記述
-): RecyclerView.Adapter<TootListAdapter.ViewHolder>(){//ここのViewHolderに各メソッドの戻り値が送られてくる
-
+) : RecyclerView.Adapter<TootListAdapter.ViewHolder>(){
 
     interface Callback{
         fun openDetail(toot: Toot)
         fun delete(toot: Toot)
     }
-    //読み込まれた投稿の数を数えてくれる
+
+    private class RecyclerDiffCallback(
+        private val oldList: List<Toot>,
+        private val newList: List<Toot>
+    ) : DiffUtil.Callback() {
+
+        override fun getOldListSize(): Int = oldList.size
+        override fun getNewListSize(): Int = newList.size
+
+        override fun areItemsTheSame(
+            oldItemPosition: Int,
+            newItemPosition: Int
+        ) = oldList[oldItemPosition] == newList[newItemPosition]
+
+        override fun areContentsTheSame(
+            oldItemPosition: Int,
+            newItemPosition: Int
+        ) = oldList[oldItemPosition].id == newList[newItemPosition].id
+    }
+
+        var tootList: ArrayList<Toot> = ArrayList()
+        set(value) {
+            coroutineScope.launch(Dispatchers.Main){
+                val diffResult = withContext(Dispatchers.Default){
+                    DiffUtil.calculateDiff(
+                        RecyclerDiffCallback(field,value)
+                    )
+                }
+
+                field = value
+
+                diffResult.dispatchUpdatesTo(this@TootListAdapter)
+            }
+        }
+
+
     override fun getItemCount() = tootList.size
 
-    //ここではリサイクラービューのリストの一つ一つのセルが作られている
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
-            : ViewHolder {//戻り値　
+            : ViewHolder {
         val binding = DataBindingUtil.inflate<ListItemTootBinding>(
-            layoutInflater,//一つのTootのレイアウトを一つのビューとして扱うときにこの記述、つまりインフレーターを使う
-            R.layout.list_item_toot,//レイアウトのURL
+            layoutInflater,
+            R.layout.list_item_toot,
             parent,
             false
         )
         return ViewHolder(binding,callback)
     }
 
-    //ViewHolderの中身を更新するメソッド
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
        holder.bind(tootList[position])
-        //更新しようとする時のデータが何番目（position）なのかを教えてくれて、その時のデータをバインドする
     }
 
     class ViewHolder(
         private val binding: ListItemTootBinding,
         private val callback: Callback?
-    //binding.rootでビューが取れる（constraintlayoutのとこ）ここのスーパークラスの引数にはviewをいれる必要がある
     ):RecyclerView.ViewHolder(binding.root){
         fun bind(toot: Toot){
            binding.toot = toot
@@ -68,7 +104,3 @@ class TootListAdapter (//最終的にこいつはViewHolderのリスト、Toot�
     }
 }
 
-//onCreateViewHolderで作られるセルはせいぜい20~30個程度。　それ以上は画面に情報を表示する上で必要ではない。
-//しかし送られてくるのデータ（ここで言う投稿）の数はもっとある。
-// そこでonBindViewHolderで見えなくなったビュー（セル）の情報は捨てられて、新しく更新されたデータを見えなくなったビューに載せる。
-// ビューの再利用→リサイクラービュー*/

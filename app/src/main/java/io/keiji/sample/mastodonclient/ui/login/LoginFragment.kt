@@ -42,9 +42,9 @@ class LoginFragment: Fragment(R.layout.fragment_login) {
     fun requestAccessToken(code: String){
         viewModel.requestAccessToken(
             BuildConfig.CLIENT_KEY,
-            BuildConfig.CLIENT_SCOPES,
             BuildConfig.CLIENT_SECRET,
             REDIRECT_URI,
+            BuildConfig.CLIENT_SCOPES,
             code
         )
     }

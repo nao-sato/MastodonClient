@@ -1,9 +1,12 @@
 package io.keiji.sample.mastodonclient.ui
 
 import io.keiji.sample.mastodonclient.entity.Account
+import io.keiji.sample.mastodonclient.entity.Media
 import io.keiji.sample.mastodonclient.entity.ResponseToken
 import io.keiji.sample.mastodonclient.entity.Toot
+import okhttp3.MultipartBody
 import retrofit2.http.*
+import java.sql.SQLInvalidAuthorizationSpecException
 
 
 interface MastodonApi {
@@ -33,7 +36,8 @@ interface MastodonApi {
     @POST("api/v1/statuses")
     suspend fun postToot(
         @Header("Authorization") accessToken: String,
-        @Field("status") status: String
+        @Field("status") status: String,
+        @Field("media_ids[]") mediaIds: List<String>? = null
     ): Toot
 
     //投稿の削除
@@ -53,6 +57,13 @@ interface MastodonApi {
         @Field("code") code: String,
         @Field("grant_type") grantType: String
     ): ResponseToken
+
+    @Multipart
+    @POST("api/v1/media")
+    suspend fun postMedia(
+        @Header("Authorization") accessToken: String,
+        @Part file: MultipartBody.Part
+    ): Media
 }
 
 
